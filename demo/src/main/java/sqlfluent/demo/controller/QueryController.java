@@ -1,43 +1,33 @@
+
 package sqlfluent.demo.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
-import sqlfluent.demo.service.SqlExecutorService;
-import sqlfluent.demo.service.TextToSqlService;
-
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
-@RequestMapping("/nlq")
+@CrossOrigin(origins = "http://localhost:3000")
+
 public class QueryController {
 
     @Autowired
-    private TextToSqlService textToSqlService;
+    private JdbcTemplate jdbcTemplate;
 
-    @Autowired
-    private SqlExecutorService sqlExecutorService;
+    @PostMapping("/run-query")
+    public Map<String, Object> runQuery(@RequestBody Map<String, String> payload) {
+        String query = payload.get("query");
 
-    @PostMapping
-    public List<?> runNaturalLanguageQuery(@RequestBody Map<String, String> payload) throws JsonProcessingException {
-        String naturalLanguageQuery = payload.get("natural_language");
-        
-        if (naturalLanguageQuery == null || naturalLanguageQuery.trim().isEmpty()) {
-            throw new IllegalArgumentException("Missing 'natural_language' in request body");
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            List<Map<String, Object>> results = jdbcTemplate.queryForList(query);
+            response.put("results", results);
+        } catch (Exception e) {
+            response.put("error", e.getMessage());
         }
 
-        System.out.println("Received natural language query: " + naturalLanguageQuery);
-
-        String sqlQuery = textToSqlService.getSqlFromText(naturalLanguageQuery);
-        System.out.println("Generated SQL query: " + sqlQuery);
-
-        if (sqlQuery == null || sqlQuery.trim().isEmpty()) {
-            throw new RuntimeException("SQL generation failed or returned empty.");
-        }
-
-        return sqlExecutorService.runQuery(sqlQuery);
+        return response;
     }
 }

@@ -9,11 +9,18 @@ import java.util.List;
 
 @Service
 public class SqlExecutorService {
+
     @PersistenceContext
     private EntityManager em;
 
     @Transactional
     public List<?> runQuery(String sql) {
-        return em.createNativeQuery(sql).getResultList();
+        try {
+            System.out.println("Executing SQL: " + sql);
+            return em.createNativeQuery(sql).getResultList();
+        } catch (Exception e) {
+            System.err.println("SQL execution failed: " + e.getMessage());
+            throw e;
+        }
     }
 }

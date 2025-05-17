@@ -1,13 +1,14 @@
 from flask import Flask, request, jsonify
 import google.generativeai as genai
-import os
+from flask_cors import CORS
+app = Flask(__name__)
+CORS(app)
 
 # Load your Gemini API key securely
 genai.configure(api_key="AIzaSyB1pR1tUxnabFNqEgRWmiBQ8XSSH7VEsb0")
 
 model = genai.GenerativeModel("gemini-1.5-flash")
 
-app = Flask(__name__)
 
 @app.route("/generate-sql", methods=["POST"])
 def generate_sql():
@@ -20,9 +21,11 @@ def generate_sql():
     prompt = (
         """Generate an SQL query based on the following natural language input. 
 Return ONLY the raw SQL code as a single-line string.
+"table names are product,order,customer"
+"please use table name as order instead of orders"
+""
  "You are an expert SQL assistant. "
-    "Write a SQL query to return customer IDs and names of customers who have placed more than 5 orders. "
-    "Assume you have two tables: `Customers(customer_id, customer_name, ...)` and `Orders(order_id, customer_id, ...)`. "
+    "Assume you have three tables: `Customer(id, name,email)` and `Order(id,customer_id,List<> of product,date) and product(id,name,price) `. "
 DO NOT include any markdown formatting like triple backticks (```), newlines, or explanations."""
         f"{natural_language_query}"
     )
